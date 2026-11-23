@@ -1,0 +1,4 @@
+interface:
+  display_name: "클라모아 피드 스튜디오"
+  short_description: "시즌 트렌드와 소재별 로고를 담은 클라모아 인스타그램 이미지 제작"
+  default_prompt: "$create-clamoa-feed로 이번 시즌 트렌드를 반영한 독립형 피드 이미지를 만들어줘."

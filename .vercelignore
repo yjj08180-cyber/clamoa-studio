@@ -1,0 +1,7 @@
+.env*
+.clamoa
+.agents
+.next
+node_modules
+.git
+tests
