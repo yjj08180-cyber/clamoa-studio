@@ -17,12 +17,12 @@ import {
   RotateCw,
   Search,
   Settings2,
+  Trash2,
   X,
 } from "lucide-react";
 import type {
   Action,
   Asset,
-  Project,
   Source,
   StudioClient,
   StudioPayload,
@@ -31,7 +31,7 @@ import { pad, thumb } from "../lib/library";
 import type { Entry } from "../lib/library";
 import Gallery from "./Gallery";
 import Boards from "./Boards";
-import { ProjectWorkflow } from "./ProjectWorkflow";
+import { DeleteContentDialog, ProjectWorkflow } from "./ProjectWorkflow";
 import { NewProjectDialog, SettingsDialog, ShotDialog } from "./ProjectDialogs";
 
 type View = "home" | "projects" | "pool" | "boards";
@@ -93,17 +93,20 @@ function Hero({
   );
 }
 function ProjectList({
-  projects,
+  client,
   onOpen,
   onCreate,
   home = false,
 }: {
-  projects: Project[];
+  client: StudioClient;
   onOpen: (id: string) => void;
   onCreate: () => void;
   home?: boolean;
 }) {
   const [search, setSearch] = useState("");
+  const [deletionId, setDeletionId] = useState<string>();
+  const projects = client.data.state.projects;
+  const deleting = projects.find((project) => project.id === deletionId);
   const filtered = projects.filter((p) =>
     (p.name + " " + p.keyword + " " + p.season)
       .toLowerCase()
@@ -148,36 +151,56 @@ function ProjectList({
             .find((s) => s.adoptedId)
             ?.versions.find((v) => v.status === "adopted");
           return (
-            <button
-              className="project-row"
-              onClick={() => onOpen(p.id)}
-              key={p.id}
-            >
-              {v ? (
-                <img alt="" src={thumb(v.image.url)} />
-              ) : (
-                <span className="project-folder">
-                  <FolderClosed size={25} />
-                </span>
-              )}
-              <span className="project-title">
-                <small>{p.season}</small>
-                <strong>{p.name}</strong>
-                {p.name !== p.keyword && (
-                  <span>
-                    {p.keyword.length > 100
-                      ? p.keyword.slice(0, 100) + "…"
-                      : p.keyword}
+            <div className="project-list-item" key={p.id}>
+              <button
+                className="project-row"
+                onClick={() => onOpen(p.id)}
+              >
+                {v ? (
+                  <img alt="" src={thumb(v.image.url)} />
+                ) : (
+                  <span className="project-folder">
+                    <FolderClosed size={25} />
                   </span>
                 )}
-              </span>
-              <span className="project-stats">{p.shots.length}컷</span>
-              <ArrowUpRight size={19} />
-            </button>
+                <span className="project-title">
+                  <small>{p.season}</small>
+                  <strong>{p.name}</strong>
+                  {p.name !== p.keyword && (
+                    <span>
+                      {p.keyword.length > 100
+                        ? p.keyword.slice(0, 100) + "…"
+                        : p.keyword}
+                    </span>
+                  )}
+                </span>
+                <span className="project-stats">{p.shots.length}컷</span>
+                <ArrowUpRight size={19} />
+              </button>
+              {!p.sample && (
+                <button
+                  type="button"
+                  className="project-list-delete"
+                  aria-label={p.name + " 프로젝트 삭제"}
+                  title="프로젝트 삭제"
+                  onClick={() => setDeletionId(p.id)}
+                >
+                  <Trash2 size={17} />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
       {!filtered.length && <p className="empty">표시할 프로젝트가 없습니다.</p>}
+      {deleting && (
+        <DeleteContentDialog
+          client={client}
+          project={deleting}
+          onClose={() => setDeletionId(undefined)}
+          onDeleted={() => setDeletionId(undefined)}
+        />
+      )}
     </section>
   );
 }
@@ -595,7 +618,7 @@ export default function Studio() {
                   />
                   <ProjectList
                     home
-                    projects={data.state.projects}
+                    client={client}
                     onOpen={(id) => go("projects", id)}
                     onCreate={() => start()}
                   />
@@ -639,7 +662,7 @@ export default function Studio() {
                 </>
               ) : (
                 <ProjectList
-                  projects={data.state.projects}
+                  client={client}
                   onOpen={(id) => go("projects", id)}
                   onCreate={() => start()}
                 />

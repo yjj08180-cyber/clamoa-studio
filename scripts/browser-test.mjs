@@ -268,7 +268,7 @@ try {
     .getByRole("button", { name: /^프로젝트/ })
     .click();
   const projectRow = page.getByRole("button", {
-    name: /Energy Orange, 가죽과 구리로 새 정물 제작/,
+    name: /Energy Orange, 가죽과 구리로 새 정물 제작.*컷/,
   });
   await projectRow.click();
   await page
@@ -295,13 +295,16 @@ try {
       .count(),
     0,
   );
-  await page
-    .getByRole("button", { name: "프로젝트 삭제", exact: true })
-    .click();
-  await page
-    .getByRole("dialog", { name: "프로젝트 삭제" })
-    .getByRole("button", { name: "삭제", exact: true })
-    .click();
+  await page.getByRole("button", { name: "← 프로젝트 목록" }).click();
+  const deleteProject = page.getByRole("button", {
+    name: /Energy Orange, 가죽과 구리로 새 정물 제작.*프로젝트 삭제/,
+  });
+  await deleteProject.click();
+  dialog = page.getByRole("dialog", { name: "프로젝트 삭제" });
+  await dialog.getByRole("button", { name: "취소", exact: true }).click();
+  await projectRow.waitFor();
+  await deleteProject.click();
+  await dialog.getByRole("button", { name: "삭제", exact: true }).click();
   await page.getByText("프로젝트를 삭제했습니다.", { exact: true }).waitFor();
   await page.getByRole("heading", { name: "프로젝트", exact: true }).waitFor();
   assert.equal(await projectRow.count(), 0);

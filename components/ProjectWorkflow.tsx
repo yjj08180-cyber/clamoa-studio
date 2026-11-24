@@ -705,7 +705,7 @@ const jobLabel = {
   failed: "실패",
 };
 
-function DeleteContentDialog({
+export function DeleteContentDialog({
   client,
   project,
   shot,
